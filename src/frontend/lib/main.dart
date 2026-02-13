@@ -1,5 +1,5 @@
 import 'package:bouh/View/Profile/CaregiverProfile.dart';
-import 'package:bouh/View/BookAppointment/DoctorDetails.dart';
+import 'package:bouh/theme/base_themes/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
