@@ -65,10 +65,6 @@ flutter:
     - assets/images/ProfileBackground.png
     - assets/images/DoctorDetails.png
 
- 
-  assets:
-    - assets/images/
-
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
