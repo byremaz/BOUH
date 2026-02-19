@@ -12,6 +12,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 
+import lombok.Data;
+
+@Data
 public class appointmentDto {
     private String appointmentId;
     private String caregiverId;

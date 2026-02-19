@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import com.bouh.backend.model.Dto.upcomingAppointmentDto;
+import com.bouh.backend.service.appointments.AppointmentsService;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,6 +45,13 @@ public class appointmentsController {
     /**
      * GET /api/appointments/upcoming/{caregiverId} — returns list of upcoming
      * booked appointments for the caregiver.
+
+    public appointmentsController(AppointmentsService appointmentsService) {
+        this.appointmentsService = appointmentsService;
+    }
+
+    /**
+     * GET /api/appointments/upcoming/{caregiverId} — returns list of upcoming booked appointments for the caregiver.
      * Response: ResponseEntity.ok(List of upcomingAppointmentDto) as raw JSON.
      */
     @GetMapping(value = "/upcoming/{caregiverId}", produces = MediaType.APPLICATION_JSON_VALUE)
