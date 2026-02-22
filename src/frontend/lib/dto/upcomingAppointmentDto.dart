@@ -9,8 +9,10 @@ class UpcomingAppointmentDto {
   final String? doctorAreaOfKnowledge;
   final String? doctorProfilePhotoURL;
   final String? childName;
-  final String? status;
+  /// 0 = لم يتم الحضور, 1 = تم الحضور. Integer only.
+  final int? status;
   final String? meetingLink;
+  final String? paymentIntentId;
 
   UpcomingAppointmentDto({
     required this.appointmentId,
@@ -23,6 +25,7 @@ class UpcomingAppointmentDto {
     this.childName,
     this.status,
     this.meetingLink,
+    this.paymentIntentId,
   });
 
   /// Parse one list element from backend JSON (raw response is List<Map>).
@@ -36,8 +39,9 @@ class UpcomingAppointmentDto {
       doctorAreaOfKnowledge: json['doctorAreaOfKnowledge'] as String?,
       doctorProfilePhotoURL: json['doctorProfilePhotoURL'] as String?,
       childName: json['childName'] as String?,
-      status: json['status'] as String?,
+      status: (json['status'] is num) ? (json['status'] as num).toInt() : null,
       meetingLink: json['meetingLink'] as String?,
+      paymentIntentId: json['paymentIntentId'] as String?,
     );
   }
 }
