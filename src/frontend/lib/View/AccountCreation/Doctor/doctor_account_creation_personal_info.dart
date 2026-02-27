@@ -622,7 +622,7 @@ class _SegButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: selected ? BColors.textDarkestBlue : BColors.darkGrey,
+            color: selected ? BColors.white : BColors.darkGrey,
           ),
         ),
       ),
