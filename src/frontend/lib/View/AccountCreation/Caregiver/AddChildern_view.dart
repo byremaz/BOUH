@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io' show SocketException;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:bouh/theme/base_themes/colors.dart';
@@ -14,8 +16,6 @@ class CaregiverAccountCreationStep2 extends StatefulWidget {
     this.onSubmitChildren,
   });
 
-  /// Step-1 data (email, password, caregiver name). When set, account creation
-  /// runs on submit: caregiver DTO is built and sent via AuthService.
   final CaregiverSignupData? signupData;
 
   /// Optional hook when not using [signupData]: custom submit of children payload.
@@ -149,21 +149,17 @@ class _CaregiverAccountCreationStep2State
         final year = c.year ?? '';
         final dateOfBirth = '$year-$month-$day';
         return ChildDto(
-          childID: '',
+          childId: '',
           name: c.nameController.text.trim(),
           dateOfBirth: dateOfBirth,
           gender: c.gender,
-          //drawings: null,
+          drawings: null,
         );
       }).toList();
 
       // Single caregiver DTO: name, email, list of children (caregiverId set by AuthService).
       final caregiverDto = CaregiverDto(
-<<<<<<< HEAD
-        caregiverId: 'cg_12',
-=======
         caregiverId: '',
->>>>>>> 5b9986e6946058677d7269c69b8d5cf6ac5fa7c0
         name: signupData.caregiverName,
         email: signupData.email,
         children: children,
@@ -190,10 +186,15 @@ class _CaregiverAccountCreationStep2State
         }
       } catch (e) {
         if (mounted) {
-          final message =
-              e is FirebaseAuthException && e.code == 'email-already-in-use'
-              ? 'البريد الإلكتروني مستخدم بالفعل بحساب آخر.'
-              : 'تعذر إنشاء الحساب. تحقق من البيانات وحاول مرة أخرى.';
+          final String message;
+          if (e is FirebaseAuthException && e.code == 'email-already-in-use') {
+            message = 'البريد الإلكتروني مستخدم بالفعل بحساب آخر.';
+          } else if (e is SocketException || e is TimeoutException) {
+            message =
+                'الخادم لا يستجيب أو لا يوجد اتصال. تحقق من الإنترنت وحاول مرة أخرى.';
+          } else {
+            message = 'تعذر إنشاء الحساب. تحقق من البيانات وحاول مرة أخرى.';
+          }
           setState(() {
             _isSubmitting = false;
             _submitError = message;
@@ -242,15 +243,9 @@ class _CaregiverAccountCreationStep2State
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Image.asset(
-                              'assets/images/login_header.png',
-                              width: 60,
-                              fit: BoxFit.contain,
-                            ),
-                            const SizedBox(width: 35),
                             const Expanded(
                               child: Text(
-                                'للاستمرار , يجب ادخال طفل واحد كحد ادنى',
+                                ' أضف طفلاً واحداً على الأقل للمتابعة',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                   fontSize: 16,
@@ -259,10 +254,16 @@ class _CaregiverAccountCreationStep2State
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 35),
+                            Image.asset(
+                              'assets/images/login_header.png',
+                              width: 60,
+                              fit: BoxFit.contain,
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 28),
 
                       ListView.builder(
                         shrinkWrap: true,
@@ -294,7 +295,7 @@ class _CaregiverAccountCreationStep2State
                                 const Align(
                                   alignment: Alignment.centerRight,
                                   child: Text(
-                                    'اسم الطفل',
+                                    'اسم الطفل *',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: BColors.darkGrey,
@@ -314,7 +315,7 @@ class _CaregiverAccountCreationStep2State
                                 const Align(
                                   alignment: Alignment.centerRight,
                                   child: Text(
-                                    'جنس الطفل',
+                                    'جنس الطفل *',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: BColors.darkGrey,
@@ -332,7 +333,7 @@ class _CaregiverAccountCreationStep2State
                                 const Align(
                                   alignment: Alignment.centerRight,
                                   child: Text(
-                                    'تاريخ الميلاد',
+                                    'تاريخ الميلاد *',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: BColors.darkGrey,
@@ -473,8 +474,8 @@ class _CaregiverAccountCreationStep2State
               ),
 
               Positioned(
-                top: -10,
-                right: 30,
+                top: 8,
+                right: 16,
                 child: IconButton(
                   icon: const Icon(
                     Icons.arrow_back_ios_new_rounded,

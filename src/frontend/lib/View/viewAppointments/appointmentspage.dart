@@ -1,16 +1,14 @@
 import 'package:bouh/View/BookAppointment/DoctorDetails.dart';
+import 'package:bouh/authentication/AuthSession.dart';
 import 'package:flutter/material.dart';
 import '../../theme/base_themes/colors.dart';
 import 'package:bouh/View/caregiverHomepage/widgets/suggestedDoctorCard.dart';
 import 'package:bouh/View/caregiverHomepage/widgets/caregiverBottomNav.dart';
-<<<<<<< HEAD
 import 'package:bouh/services/doctorsService.dart';
 import 'package:bouh/dto/doctorSummaryDto.dart';
-=======
 import 'package:bouh/dto/DoctorSearchDto.dart';
 import 'package:bouh/services/DoctorSearchService.dart';
 import 'dart:async';
->>>>>>> 5b9986e6946058677d7269c69b8d5cf6ac5fa7c0
 
 /// Appointments screen
 ///
