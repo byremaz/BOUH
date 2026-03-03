@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 import '../../theme/base_themes/colors.dart';
 import 'package:bouh/View/caregiverHomepage/widgets/suggestedDoctorCard.dart';
 import 'package:bouh/View/caregiverHomepage/widgets/caregiverBottomNav.dart';
+<<<<<<< HEAD
 import 'package:bouh/services/doctorsService.dart';
 import 'package:bouh/dto/doctorSummaryDto.dart';
+=======
+import 'package:bouh/dto/DoctorSearchDto.dart';
+import 'package:bouh/services/DoctorSearchService.dart';
+import 'dart:async';
+>>>>>>> 5b9986e6946058677d7269c69b8d5cf6ac5fa7c0
 
 /// Appointments screen
 ///
@@ -35,16 +41,84 @@ class AppointmentsPage extends StatefulWidget {
 
 class _AppointmentsPageState extends State<AppointmentsPage> {
   final TextEditingController _searchController = TextEditingController();
+<<<<<<< HEAD
   late Future<List<DoctorSummaryDto>> _doctorsFuture;
   @override
   void initState() {
     super.initState();
     _doctorsFuture = DoctorsService.getDoctorsForCaregiver();
+=======
+  final DoctorSearchService _doctorSearchService = DoctorSearchService();
+  List<DoctorSearchDTO> _doctors = [];
+  List<DoctorSearchDTO> _filteredDoctors = [];
+  bool _isLoading = false;
+  String? _error;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+    _loadTopRatedDoctors();
+  }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (_searchController.text.isNotEmpty) {
+        _searchDoctors(_searchController.text);
+      } else {
+        _loadTopRatedDoctors();
+      }
+    });
+  }
+
+  Future<void> _searchDoctors(String name) async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final results = await _doctorSearchService.searchDoctors(name);
+      setState(() {
+        _doctors = results;
+        _filteredDoctors = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'حدث خطأ أثناء البحث';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadTopRatedDoctors() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final results = await _doctorSearchService.getTopRatedDoctors();
+      setState(() {
+        _doctors = results;
+        _filteredDoctors = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'حدث خطأ في تحميل الأطباء';
+        _isLoading = false;
+      });
+    }
+>>>>>>> 5b9986e6946058677d7269c69b8d5cf6ac5fa7c0
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -265,6 +339,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   }
 
   Widget _buildDoctorList() {
+<<<<<<< HEAD
     return FutureBuilder<List<DoctorSummaryDto>>(
       future: _doctorsFuture,
       builder: (context, snapshot) {
@@ -305,6 +380,36 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
           ],
         );
       },
+=======
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Text(_error!, style: const TextStyle(color: Colors.red)),
+      );
+    }
+
+    if (_filteredDoctors.isEmpty) {
+      return const Center(
+        child: Text('ابحث عن طبيب', style: TextStyle(color: Color(0xFF7D8A96))),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (int i = 0; i < _filteredDoctors.length; i++) ...[
+          SuggestedDoctorCard(
+            name: _filteredDoctors[i].name,
+            specialty: _filteredDoctors[i].specialty,
+            rating: _filteredDoctors[i].rating.toInt(),
+          ),
+          if (i < _filteredDoctors.length - 1) const SizedBox(height: _cardGap),
+        ],
+      ],
+>>>>>>> 5b9986e6946058677d7269c69b8d5cf6ac5fa7c0
     );
   }
 }

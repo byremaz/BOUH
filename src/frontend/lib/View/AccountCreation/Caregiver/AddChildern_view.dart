@@ -159,7 +159,11 @@ class _CaregiverAccountCreationStep2State
 
       // Single caregiver DTO: name, email, list of children (caregiverId set by AuthService).
       final caregiverDto = CaregiverDto(
+<<<<<<< HEAD
         caregiverId: 'cg_12',
+=======
+        caregiverId: '',
+>>>>>>> 5b9986e6946058677d7269c69b8d5cf6ac5fa7c0
         name: signupData.caregiverName,
         email: signupData.email,
         children: children,
