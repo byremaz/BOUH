@@ -15,8 +15,12 @@ class DoctorNavbar extends StatefulWidget {
 
 class _DoctorNavbarState extends State<DoctorNavbar> {
   int _currentIndex = 0;
+  final GlobalKey<DoctorHomePageState> _homeKey = GlobalKey<DoctorHomePageState>();
 
   void _onTap(int index) {
+    if (index == 0) {
+      _homeKey.currentState?.refresh();
+    }
     setState(() => _currentIndex = index);
   }
 
@@ -28,7 +32,7 @@ class _DoctorNavbarState extends State<DoctorNavbar> {
       child: IndexedStack(
         index: stackIndex,
         children: [
-          DoctorHomePage(currentIndex: _currentIndex, onTap: _onTap),
+          DoctorHomePage(key: _homeKey, currentIndex: _currentIndex, onTap: _onTap),
           _DoctorAppointmentsTabContent(
             currentIndex: _currentIndex,
             onTap: _onTap,
