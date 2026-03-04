@@ -10,6 +10,7 @@ import 'package:bouh/dto/upcomingAppointmentDto.dart';
 import 'package:bouh/services/appointmentsService.dart';
 import 'package:bouh/services/payment/RefundService.dart';
 import 'package:bouh/widgets/confirmation_popup.dart';
+import 'package:bouh/widgets/loading_overlay.dart';
 
 /// When used inside [DoctorNavbar], pass [currentIndex] and [onTap] so the
 /// bottom nav reflects the active tab and handles tab changes.
@@ -153,28 +154,33 @@ class DoctorHomePageState extends State<DoctorHomePage> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: BColors.lightGrey,
-        body: Column(
+        body: Stack(
           children: [
-            _header(context, topPadding),
-            const SizedBox(height: 16),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  16,
-                  0,
-                  16,
-                  DoctorBottomNav.barHeight + _cardGap,
+            Column(
+              children: [
+                _header(context, topPadding),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      16,
+                      0,
+                      16,
+                      DoctorBottomNav.barHeight + _cardGap,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _todayHeader(),
+                        const SizedBox(height: 12),
+                        _buildTodayList(),
+                      ],
+                    ),
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _todayHeader(),
-                    const SizedBox(height: 12),
-                    _buildTodayList(),
-                  ],
-                ),
-              ),
+              ],
             ),
+            if (_loading) const BouhLoadingOverlay(showBarrier: false),
           ],
         ),
         bottomNavigationBar: widget.onTap != null
@@ -196,7 +202,7 @@ class DoctorHomePageState extends State<DoctorHomePage> {
 
   Widget _buildTodayList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SizedBox.shrink();
     }
     if (_error != null) {
       return Center(

@@ -12,6 +12,7 @@ import 'package:bouh/dto/upcomingAppointmentDto.dart';
 import 'package:bouh/services/appointmentsService.dart';
 import 'package:bouh/services/payment/RefundService.dart';
 import 'package:bouh/widgets/confirmation_popup.dart';
+import 'package:bouh/widgets/loading_overlay.dart';
 
 class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({
@@ -151,44 +152,49 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: BColors.lightGrey,
-        body: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              _TopHeader(
-                onCalendarTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AvailableScheduleScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 14),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _SegmentedTabs(
-                  selected: _AppointmentsTab.upcoming,
-                  onUpcomingTap: () {},
-                  onPastTap: () {
-                    if (widget.onSwitchToPrevious != null) {
-                      widget.onSwitchToPrevious!();
-                    } else {
-                      Navigator.pushReplacement(
+        body: Stack(
+          children: [
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  _TopHeader(
+                    onCalendarTap: () {
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const PrevAppointmentsScreen(),
+                          builder: (_) => const AvailableScheduleScreen(),
                         ),
                       );
-                    }
-                  },
-                ),
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _SegmentedTabs(
+                      selected: _AppointmentsTab.upcoming,
+                      onUpcomingTap: () {},
+                      onPastTap: () {
+                        if (widget.onSwitchToPrevious != null) {
+                          widget.onSwitchToPrevious!();
+                        } else {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PrevAppointmentsScreen(),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(child: _buildList()),
+                ],
               ),
-              const SizedBox(height: 16),
-              Expanded(child: _buildList()),
-            ],
-          ),
+            ),
+            if (_loading) const BouhLoadingOverlay(showBarrier: false),
+          ],
         ),
         bottomNavigationBar: widget.onTap != null
             ? Material(
@@ -209,7 +215,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
 
   Widget _buildList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SizedBox.shrink();
     }
     if (_error != null) {
       return const Center(

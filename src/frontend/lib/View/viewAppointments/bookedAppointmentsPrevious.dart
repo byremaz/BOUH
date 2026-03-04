@@ -6,6 +6,7 @@ import 'package:bouh/authentication/AuthSession.dart';
 import 'package:bouh/authentication/AuthService.dart';
 import 'package:bouh/dto/upcomingAppointmentDto.dart';
 import 'package:bouh/services/appointmentsService.dart';
+import 'package:bouh/widgets/loading_overlay.dart';
 import 'widgets/previousBookedAppointmentCard.dart';
 
 /// Booked appointments – previous.
@@ -203,31 +204,36 @@ class _BookedAppointmentsPreviousState
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: BColors.white,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTitle(),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: _contentPaddingH,
+        body: Stack(
+          children: [
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTitle(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: _contentPaddingH,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildSegmentedControl(context),
+                          const SizedBox(height: _sectionGap),
+                          _buildFilterBar(),
+                          const SizedBox(height: _sectionGap),
+                          _buildCardList(),
+                          SizedBox(height: CaregiverBottomNav.barHeight + _cardGap),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildSegmentedControl(context),
-                      const SizedBox(height: _sectionGap),
-                      _buildFilterBar(),
-                      const SizedBox(height: _sectionGap),
-                      _buildCardList(),
-                      SizedBox(height: CaregiverBottomNav.barHeight + _cardGap),
-                    ],
-                  ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+            if (_loading) const BouhLoadingOverlay(showBarrier: false),
+          ],
         ),
         bottomNavigationBar: Material(
           clipBehavior: Clip.none,
@@ -373,7 +379,7 @@ class _BookedAppointmentsPreviousState
 
   Widget _buildCardList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SizedBox.shrink();
     }
     if (_error != null) {
       return const Center(
