@@ -9,7 +9,6 @@ import 'package:bouh/authentication/AuthSession.dart';
 import 'package:bouh/authentication/AuthService.dart';
 import 'package:bouh/dto/upcomingAppointmentDto.dart';
 import 'package:bouh/services/appointmentsService.dart';
-import 'package:bouh/widgets/loading_overlay.dart';
 
 class PrevAppointmentsScreen extends StatefulWidget {
   const PrevAppointmentsScreen({
@@ -220,7 +219,7 @@ class _PrevAppointmentsScreenState extends State<PrevAppointmentsScreen> {
 
   Widget _buildList() {
     if (_loading) {
-      return const BouhLoadingOverlay();
+      return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
       return const Center(
