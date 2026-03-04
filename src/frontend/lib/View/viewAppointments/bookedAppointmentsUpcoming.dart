@@ -11,6 +11,7 @@ import 'package:bouh/services/appointmentsService.dart';
 import 'package:bouh/dto/payment/RefundResponseDto.dart';
 import 'package:bouh/services/payment/RefundService.dart';
 import 'package:bouh/widgets/confirmation_popup.dart';
+import 'package:bouh/widgets/loading_overlay.dart';
 
 /// Booked appointments – upcoming
 ///
@@ -379,7 +380,7 @@ class _BookedAppointmentsUpcomingState
 
   Widget _buildCardList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const BouhLoadingOverlay();
     }
     if (_error != null) {
       return const Center(

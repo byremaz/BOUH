@@ -7,6 +7,7 @@ import 'package:bouh/authentication/AuthService.dart';
 import 'package:bouh/dto/upcomingAppointmentDto.dart';
 import 'package:bouh/services/appointmentsService.dart';
 import 'widgets/previousBookedAppointmentCard.dart';
+import 'package:bouh/widgets/loading_overlay.dart';
 
 /// Booked appointments – previous.
 ///
@@ -48,7 +49,10 @@ class _BookedAppointmentsPreviousState
 
   final AppointmentsService _appointmentsService = AppointmentsService();
 
-  StreamSubscription<(List<UpcomingAppointmentDto>, List<UpcomingAppointmentDto>)>? _subscription;
+  StreamSubscription<
+    (List<UpcomingAppointmentDto>, List<UpcomingAppointmentDto>)
+  >?
+  _subscription;
 
   // Upcoming list from last stream event; ticker moves ended ones into _list (no HTTP).
   List<UpcomingAppointmentDto> _upcomingCache = [];
@@ -136,7 +140,10 @@ class _BookedAppointmentsPreviousState
       bool changed = false;
       setState(() {
         _upcomingCache.removeWhere((dto) {
-          final end = AppointmentsService.parseAppointmentTime(dto.date, dto.endTime);
+          final end = AppointmentsService.parseAppointmentTime(
+            dto.date,
+            dto.endTime,
+          );
           if (end == null || now.isBefore(end)) return false;
           _list.add(dto);
           changed = true;
@@ -145,8 +152,14 @@ class _BookedAppointmentsPreviousState
         // Re-sort newest first when new items were added
         if (changed) {
           _list.sort((a, b) {
-            final ta = AppointmentsService.parseAppointmentTime(a.date, a.startTime);
-            final tb = AppointmentsService.parseAppointmentTime(b.date, b.startTime);
+            final ta = AppointmentsService.parseAppointmentTime(
+              a.date,
+              a.startTime,
+            );
+            final tb = AppointmentsService.parseAppointmentTime(
+              b.date,
+              b.startTime,
+            );
             if (ta == null && tb == null) return 0;
             if (ta == null) return 1;
             if (tb == null) return -1;
@@ -361,7 +374,7 @@ class _BookedAppointmentsPreviousState
 
   Widget _buildCardList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const BouhLoadingOverlay();
     }
     if (_error != null) {
       return const Center(

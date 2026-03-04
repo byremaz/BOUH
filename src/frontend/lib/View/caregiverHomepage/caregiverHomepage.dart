@@ -7,6 +7,7 @@ import 'package:bouh/dto/upcomingAppointmentDto.dart';
 import 'package:bouh/authentication/AuthSession.dart';
 import 'package:bouh/authentication/AuthService.dart';
 import 'package:bouh/services/appointmentsService.dart';
+import 'package:bouh/widgets/loading_overlay.dart';
 import 'package:bouh/dto/payment/RefundResponseDto.dart';
 import 'package:bouh/services/payment/RefundService.dart';
 import 'package:bouh/widgets/confirmation_popup.dart';
@@ -501,7 +502,7 @@ class _CaregiverHomepageState extends State<CaregiverHomepage> {
 
   Widget _buildTodayAppointments() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const BouhLoadingOverlay();
     }
     if (_error != null) {
       return const Center(

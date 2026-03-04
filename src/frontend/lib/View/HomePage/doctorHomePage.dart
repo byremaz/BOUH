@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bouh/View/HomePage/widgets/appointment_card.dart';
 import 'package:bouh/View/HomePage/widgets/doctorBottomNav.dart';
 import 'package:bouh/theme/base_themes/colors.dart';
+import 'package:bouh/widgets/loading_overlay.dart';
 import 'package:bouh/authentication/AuthSession.dart';
 import 'package:bouh/authentication/AuthService.dart';
 import 'package:bouh/dto/upcomingAppointmentDto.dart';
@@ -196,7 +197,7 @@ class DoctorHomePageState extends State<DoctorHomePage> {
 
   Widget _buildTodayList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const BouhLoadingOverlay();
     }
     if (_error != null) {
       return Center(
