@@ -80,7 +80,14 @@ class _LoginViewState extends State<LoginView> {
     }
 
     // Validate top-level domain (e.g. reject gmail.vrgt, gmail.ff).
-    const allowedTlds = <String>{'com', 'net', 'org', 'edu', 'gov', 'sa'};
+    const allowedTlds = <String>{
+      'com',
+      'net',
+      'org',
+      'edu',
+      'gov',
+      'sa',
+    };
     final tld = domainParts.last;
     final tldRegex = RegExp(r'^[a-zA-Z]{2,}$');
     if (!tldRegex.hasMatch(tld) || !allowedTlds.contains(tld)) {
@@ -122,8 +129,9 @@ class _LoginViewState extends State<LoginView> {
         showDialog<void>(
           context: context,
           barrierDismissible: false,
-          builder: (dialogContext) =>
-              DoctorPendingPopup(onOk: () => Navigator.pop(dialogContext)),
+          builder: (dialogContext) => DoctorPendingPopup(
+            onOk: () => Navigator.pop(dialogContext),
+          ),
         );
       });
     }
@@ -163,10 +171,7 @@ class _LoginViewState extends State<LoginView> {
     setState(() => _isLoggingIn = true);
 
     try {
-      final role = await AuthService.instance.login(
-        email: email,
-        password: password,
-      );
+      final role = await AuthService.instance.login(email: email, password: password);
 
       if (!mounted) return;
       // Keep overlay on until we navigate (single loading, no second screen)
@@ -184,9 +189,7 @@ class _LoginViewState extends State<LoginView> {
           break;
         case 'pending':
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => const LoginView(showPendingDoctorDialog: true),
-            ),
+            MaterialPageRoute(builder: (_) => const LoginView(showPendingDoctorDialog: true)),
           );
           break;
         default:
@@ -494,8 +497,8 @@ class _LoginViewState extends State<LoginView> {
               ),
             if (_isLoggingIn) BouhLoadingOverlay(),
           ],
+          ),
         ),
-      ),
     );
   }
 }

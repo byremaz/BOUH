@@ -8,7 +8,11 @@ import 'package:bouh/widgets/confirmation_popup.dart';
 import 'package:bouh/widgets/loading_overlay.dart';
 
 class CaregiverAccountView extends StatefulWidget {
-  const CaregiverAccountView({super.key, this.currentIndex = 3, this.onTap});
+  const CaregiverAccountView({
+    super.key,
+    this.currentIndex = 3,
+    this.onTap,
+  });
 
   /// Active bottom nav index (3 = profile). Pass when used inside [CaregiverNavbar].
   final int currentIndex;
@@ -34,18 +38,19 @@ class _CaregiverAccountViewState extends State<CaregiverAccountView> {
           children: [
             Column(
               children: [
-                //HEADER
-                SizedBox(
-                  height: 220,
-                  width: double.infinity,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        'assets/images/ProfileBackground.png',
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                      ),
+            //HEADER
+            SizedBox(
+              height: 220,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    'assets/images/ProfileBackground.png',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                  ),
+
 
                       SafeArea(
                         bottom: false,
@@ -144,48 +149,47 @@ class _CaregiverAccountViewState extends State<CaregiverAccountView> {
 
                         const Spacer(),
 
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 180,
-                                height: 40,
-                                child: ElevatedButton(
-                                  onPressed: () =>
-                                      _handleDeleteAccount(context),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFE4573D),
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    "حذف الحساب",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 180,
+                            height: 40,
+                            child: ElevatedButton(
+                              onPressed: () => _handleDeleteAccount(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE4573D),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              if (_deleteError != null) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  _deleteError!,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: BColors.validationError,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              child: const Text(
+                                "حذف الحساب",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
-                              ],
-                            ],
+                              ),
+                            ),
                           ),
-                        ),
+                          if (_deleteError != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              _deleteError!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: BColors.validationError,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
 
                         const SizedBox(height: 150),
                       ],
@@ -327,7 +331,7 @@ class _LogoutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap, // TODO later
+      onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: const [
