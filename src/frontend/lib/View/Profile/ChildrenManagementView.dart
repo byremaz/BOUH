@@ -1,3 +1,5 @@
+import 'package:bouh/authentication/AuthSession.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:bouh/theme/base_themes/colors.dart';
 import 'package:bouh/services/childrenService.dart';
@@ -12,19 +14,20 @@ class ChildrenManagementView extends StatefulWidget {
 
 class _ChildrenManagementViewState extends State<ChildrenManagementView> {
   final ChildrenService _service = ChildrenService();
-
-  final String caregiverId = "cg_12";
+  late final String caregiverId;
 
   bool isLoading = true;
   List<ChildDto> children = [];
 
-  // ✅ MAX CHILDREN CHECK (added)
+  //  MAX CHILDREN CHECK
   static const int _maxChildren = 5;
   bool get _reachedMaxChildren => children.length >= _maxChildren;
 
   @override
   void initState() {
     super.initState();
+    final uid = AuthSession.instance.userId;
+    caregiverId = uid!; // Firebase UID
     _loadChildren();
   }
 
@@ -98,8 +101,12 @@ class _ChildrenManagementViewState extends State<ChildrenManagementView> {
       _showSnack("تمت إضافة الطفل");
       await _loadChildren();
     } catch (e) {
-      // احتمال: max 5 children
-      _showSnack("لقد تجاوزت العدد المسموح ");
+      final msg = e.toString();
+      if (msg.contains("5") || msg.toLowerCase().contains("only add up to 5")) {
+        _showSnack("لقد تجاوزت العدد المسموح ($_maxChildren أطفال)");
+      } else {
+        _showSnack("تعذر إضافة الطفل: ${_cleanError(msg)}");
+      }
     }
   }
 
@@ -128,7 +135,8 @@ class _ChildrenManagementViewState extends State<ChildrenManagementView> {
       _showSnack("تم تحديث بيانات الطفل بنجاح");
       await _loadChildren();
     } catch (e) {
-      _showSnack("تعذر تحديث بيانات الطفل");
+      print('UPDATE ERROR: $e');
+      _showSnack("تعذر تحديث بيانات الطفل: ${_cleanError(e.toString())}");
     }
   }
 
