@@ -2,6 +2,7 @@ package com.bouh.backend.service.appointments;
 
 import com.bouh.backend.config.TimeSlotConfig;
 import com.bouh.backend.model.Dto.appointmentDto;
+import com.bouh.backend.model.Dto.caregiverDto;
 import com.google.cloud.Timestamp;
 import com.bouh.backend.model.Dto.doctorDto;
 import com.bouh.backend.model.Dto.upcomingAppointmentDto;
@@ -125,7 +126,8 @@ public class AppointmentsService {
             String id = cgId;
             caregiverFutures.put(id, CompletableFuture.supplyAsync(() -> {
                 try {
-                    return caregiverRepo.findNameByUid(id);
+                    caregiverDto cg = caregiverRepo.findByUid(id);
+                    return cg != null ? cg.getName() : null;
                 } catch (Exception e) {
                     return null;
                 }
