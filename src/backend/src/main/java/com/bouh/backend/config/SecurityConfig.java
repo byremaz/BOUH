@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/gemini/**").permitAll()
 
                         // Allow CORS preflight requests without authentication
-                        //.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // Any other request must also be authenticated
                         .anyRequest().authenticated()
