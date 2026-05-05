@@ -6,7 +6,6 @@ import 'package:bouh/config/slot_config.dart';
 import 'package:bouh/dto/Meeting/join_meeting_response_dto.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import '../../theme/base_themes/colors.dart';
 import 'package:bouh/View/viewAppointments/widgets/appointmentCard.dart';
 import 'package:bouh/dto/upcomingAppointmentDto.dart';
@@ -16,8 +15,8 @@ import 'package:bouh/services/appointmentsService.dart';
 import 'package:bouh/services/payment/RefundService.dart';
 import 'package:bouh/widgets/confirmation_popup.dart';
 import 'package:bouh/widgets/loading_overlay.dart';
-import 'widgets/suggestedDoctorCard.dart';
 import 'widgets/caregiverBottomNav.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CaregiverHomepage extends StatefulWidget {
   const CaregiverHomepage({super.key, this.currentIndex = 0, this.onTap});
@@ -47,7 +46,10 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
 
   StreamSubscription<List<UpcomingAppointmentDto>>? _subscription;
   Timer? _ticker;
-
+  final Map<String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
+  _childListeners = {};
+  final Map<String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
+  _doctorListeners = {};
   @override
   void initState() {
     super.initState();
@@ -60,6 +62,14 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
     WidgetsBinding.instance.removeObserver(this);
     _subscription?.cancel();
     _ticker?.cancel();
+    for (final sub in _childListeners.values) {
+      sub.cancel();
+    }
+    _childListeners.clear();
+    for (final sub in _doctorListeners.values) {
+      sub.cancel();
+    }
+    _doctorListeners.clear();
     super.dispose();
   }
 
@@ -90,7 +100,14 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
   void _subscribeToStream(String? caregiverId) {
     _subscription?.cancel();
     _ticker?.cancel();
-
+    for (final sub in _childListeners.values) {
+      sub.cancel();
+    }
+    _childListeners.clear();
+    for (final sub in _doctorListeners.values) {
+      sub.cancel();
+    }
+    _doctorListeners.clear();
     if (caregiverId == null || caregiverId.isEmpty) {
       setState(() {
         _list = [];
@@ -132,6 +149,8 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
   void _startTicker() {
     _ticker?.cancel();
     if (_list.isEmpty) return;
+    _updateChildListeners(_list);
+    _updateDoctorListeners(_list);
 
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) {
@@ -252,10 +271,12 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
       onActionTap = _refundLoading
           ? null
           : () async {
-              final refundSucceeded = await _refundAppointment(dto);
-              if (!refundSucceeded) return;
+              setState(() => _refundLoading = true);
 
               try {
+                final refundSucceeded = await _refundAppointment(dto);
+                if (!refundSucceeded) return;
+
                 await _appointmentsService.cancelAppointment(
                   appointmentId: dto.appointmentId,
                 );
@@ -315,6 +336,8 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
                 ScaffoldMessenger.of(
                   context,
                 ).showSnackBar(SnackBar(content: Text("فشل إلغاء الموعد: $e")));
+              } finally {
+                if (mounted) setState(() => _refundLoading = false);
               }
             };
     }
@@ -330,14 +353,6 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
       actionColor: actionColor,
       onActionTap: onActionTap,
     );
-  }
-
-  Future<void> _openMeetingLink(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   Future<bool> _refundAppointment(UpcomingAppointmentDto dto) async {
@@ -359,8 +374,6 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
       isDestructive: true,
     );
     if (confirm != true) return false;
-
-    setState(() => _refundLoading = true);
 
     try {
       await _refundService.refund(paymentIntentId: pi);
@@ -401,8 +414,6 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
       );
 
       return false;
-    } finally {
-      if (mounted) setState(() => _refundLoading = false);
     }
   }
 
@@ -425,6 +436,8 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
               child: _buildHeader(context, topPadding),
             ),
             _buildContent(context, topPadding),
+            if (_refundLoading)
+              const Positioned.fill(child: BouhLoadingOverlay()),
           ],
         ),
         bottomNavigationBar: Material(
@@ -591,43 +604,6 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
     );
   }
 
-  Widget _buildSectionWithViewAll(String title) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      textDirection: TextDirection.rtl,
-      children: [
-        Text(
-          title,
-          textAlign: TextAlign.right,
-          style: TextStyle(
-            fontFamily: 'Markazi Text',
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: BColors.textDarkestBlue,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 8, top: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'رؤية الكل',
-                style: TextStyle(
-                  fontFamily: 'Markazi Text',
-                  fontSize: 13,
-                  color: BColors.textBlack,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right, size: 20, color: BColors.textBlack),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Future<void> _joinAgoraMeeting(UpcomingAppointmentDto dto) async {
     try {
       final endTime = AppointmentsService.parseAppointmentTime(
@@ -688,5 +664,97 @@ class CaregiverHomepageState extends State<CaregiverHomepage>
   void _pauseLiveUpdates() {
     _ticker?.cancel();
     _subscription?.cancel();
+    for (final sub in _childListeners.values) {
+      sub.cancel();
+    }
+    _childListeners.clear();
+    for (final sub in _doctorListeners.values) {
+      sub.cancel();
+    }
+    _doctorListeners.clear();
+  }
+
+  void _updateChildListeners(List<UpcomingAppointmentDto> list) {
+    final caregiverId = AuthSession.instance.userId;
+    if (caregiverId == null || caregiverId.isEmpty) return;
+
+    final currentIds = list
+        .map((d) => d.childId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    _childListeners.keys
+        .where((id) => !currentIds.contains(id))
+        .toList()
+        .forEach((id) => _childListeners.remove(id)?.cancel());
+
+    for (final childId in currentIds) {
+      if (_childListeners.containsKey(childId)) continue;
+
+      _childListeners[childId] = FirebaseFirestore.instance
+          .collection('caregivers')
+          .doc(caregiverId)
+          .collection('children')
+          .doc(childId)
+          .snapshots()
+          .skip(1)
+          .listen((_) => _refetchOnChildChange());
+    }
+  }
+
+  Future<void> _refetchOnChildChange() async {
+    final caregiverId = AuthSession.instance.userId;
+    if (caregiverId == null || caregiverId.isEmpty || !mounted) return;
+
+    try {
+      final list = await _appointmentsService.getUpcomingAppointments(
+        caregiverId,
+      );
+      if (!mounted) return;
+
+      setState(() => _list = _removeExpired(list));
+      _updateChildListeners(_list);
+    } catch (_) {}
+  }
+
+  void _updateDoctorListeners(List<UpcomingAppointmentDto> list) {
+    final currentIds = list
+        .map((d) => d.doctorId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    _doctorListeners.keys
+        .where((id) => !currentIds.contains(id))
+        .toList()
+        .forEach((id) => _doctorListeners.remove(id)?.cancel());
+
+    for (final doctorId in currentIds) {
+      if (_doctorListeners.containsKey(doctorId)) continue;
+
+      _doctorListeners[doctorId] = FirebaseFirestore.instance
+          .collection('doctors')
+          .doc(doctorId)
+          .snapshots()
+          .skip(1)
+          .listen((_) => _refetchOnDoctorChange());
+    }
+  }
+
+  Future<void> _refetchOnDoctorChange() async {
+    final caregiverId = AuthSession.instance.userId;
+    if (caregiverId == null || caregiverId.isEmpty || !mounted) return;
+
+    try {
+      final list = await _appointmentsService.getUpcomingAppointments(
+        caregiverId,
+      );
+      if (!mounted) return;
+
+      setState(() => _list = _removeExpired(list));
+      _updateChildListeners(_list);
+      _updateDoctorListeners(_list);
+    } catch (_) {}
   }
 }

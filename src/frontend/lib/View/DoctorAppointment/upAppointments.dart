@@ -4,9 +4,9 @@ import 'package:bouh/View/Meeting/agora_call_page.dart';
 import 'package:bouh/config/api_config.dart';
 import 'package:bouh/config/slot_config.dart';
 import 'package:bouh/dto/Meeting/join_meeting_response_dto.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:bouh/theme/base_themes/colors.dart';
 import 'package:bouh/View/DoctorAppointment/prevAppointments.dart';
 import 'package:bouh/View/DoctorAppointment/AvailableScheduleScreen.dart';
@@ -46,7 +46,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   final RefundService _refundService = RefundService();
   StreamSubscription<List<UpcomingAppointmentDto>>? _subscription;
   Timer? _ticker;
-
+  final Map<String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
+  _childListeners = {};
+  final Map<String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
+  _caregiverListeners = {};
   static const double _cardGap = 16;
 
   @override
@@ -71,6 +74,14 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   void _subscribeToStream(String? doctorId) {
     _subscription?.cancel();
     _ticker?.cancel();
+    for (final sub in _childListeners.values) {
+      sub.cancel();
+    }
+    _childListeners.clear();
+    for (final sub in _caregiverListeners.values) {
+      sub.cancel();
+    }
+    _caregiverListeners.clear();
 
     if (doctorId == null || doctorId.isEmpty) {
       setState(() {
@@ -94,10 +105,12 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             if (!mounted) return;
             setState(() {
               _list = _removeExpired(list);
+              _updateChildListeners(_list);
               _loading = false;
               _error = null;
             });
             _startTicker();
+            _updateCaregiverListeners(_list);
           },
           onError: (e) {
             if (!mounted) return;
@@ -149,6 +162,14 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   void dispose() {
     _subscription?.cancel();
     _ticker?.cancel();
+    for (final sub in _childListeners.values) {
+      sub.cancel();
+    }
+    _childListeners.clear();
+    for (final sub in _caregiverListeners.values) {
+      sub.cancel();
+    }
+    _caregiverListeners.clear();
     super.dispose();
   }
 
@@ -200,6 +221,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               ),
             ),
             if (_loading) const BouhLoadingOverlay(showBarrier: false),
+            if (_refundLoading)
+              const Positioned.fill(child: BouhLoadingOverlay()),
           ],
         ),
         bottomNavigationBar: widget.onTap != null
@@ -288,10 +311,12 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       onActionTap = _refundLoading
           ? null
           : () async {
-              final refundSucceeded = await _refundAppointment(dto);
-              if (!refundSucceeded) return;
+              setState(() => _refundLoading = true);
 
               try {
+                final refundSucceeded = await _refundAppointment(dto);
+                if (!refundSucceeded) return;
+
                 await _appointmentsService.cancelAppointment(
                   appointmentId: dto.appointmentId,
                 );
@@ -351,6 +376,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 ScaffoldMessenger.of(
                   context,
                 ).showSnackBar(SnackBar(content: Text("فشل إلغاء الموعد: $e")));
+              } finally {
+                if (mounted) setState(() => _refundLoading = false);
               }
             };
     }
@@ -366,14 +393,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       buttonType: buttonType,
       onActionTap: onActionTap,
     );
-  }
-
-  Future<void> _openMeetingLink(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   static bool _isJoinEnabled(UpcomingAppointmentDto dto) {
@@ -431,8 +450,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     );
     if (confirm != true) return false;
 
-    setState(() => _refundLoading = true);
-
     try {
       await _refundService.refund(paymentIntentId: pi);
       return true;
@@ -472,8 +489,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       );
 
       return false;
-    } finally {
-      if (mounted) setState(() => _refundLoading = false);
     }
   }
 
@@ -547,9 +562,105 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     }
   }
 
+  void _updateChildListeners(List<UpcomingAppointmentDto> list) {
+    final currentKeys = list
+        .where((d) => d.childId != null && d.caregiverId != null)
+        .map((d) => '${d.caregiverId}_${d.childId}')
+        .toSet();
+
+    _childListeners.keys
+        .where((k) => !currentKeys.contains(k))
+        .toList()
+        .forEach((k) => _childListeners.remove(k)?.cancel());
+
+    for (final dto in list) {
+      final caregiverId = dto.caregiverId;
+      final childId = dto.childId;
+
+      if (caregiverId == null || childId == null) continue;
+
+      final key = '${caregiverId}_$childId';
+
+      if (_childListeners.containsKey(key)) continue;
+
+      _childListeners[key] = FirebaseFirestore.instance
+          .collection('caregivers')
+          .doc(caregiverId)
+          .collection('children')
+          .doc(childId)
+          .snapshots()
+          .skip(1)
+          .listen((_) => _refetch());
+    }
+  }
+
+  Future<void> _refetch() async {
+    final doctorId = AuthSession.instance.userId;
+    if (doctorId == null || doctorId.isEmpty || !mounted) return;
+
+    try {
+      final list = await _appointmentsService.getUpcomingAppointmentsByDoctor(
+        doctorId,
+      );
+
+      if (!mounted) return;
+
+      setState(() => _list = _removeExpired(list));
+      _updateChildListeners(_list);
+    } catch (_) {}
+  }
+
   void _pauseLiveUpdates() {
     _ticker?.cancel();
     _subscription?.cancel();
+    for (final sub in _caregiverListeners.values) {
+      sub.cancel();
+    }
+    _caregiverListeners.clear();
+    for (final sub in _childListeners.values) {
+      sub.cancel();
+    }
+    _childListeners.clear();
+  }
+
+  void _updateCaregiverListeners(List<UpcomingAppointmentDto> list) {
+    final currentIds = list
+        .map((d) => d.caregiverId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    _caregiverListeners.keys
+        .where((id) => !currentIds.contains(id))
+        .toList()
+        .forEach((id) => _caregiverListeners.remove(id)?.cancel());
+
+    for (final caregiverId in currentIds) {
+      if (_caregiverListeners.containsKey(caregiverId)) continue;
+
+      _caregiverListeners[caregiverId] = FirebaseFirestore.instance
+          .collection('caregivers')
+          .doc(caregiverId)
+          .snapshots()
+          .skip(1)
+          .listen((_) => _refetchOnCaregiverChange());
+    }
+  }
+
+  Future<void> _refetchOnCaregiverChange() async {
+    final doctorId = AuthSession.instance.userId;
+    if (doctorId == null || doctorId.isEmpty || !mounted) return;
+
+    try {
+      final list = await _appointmentsService.getUpcomingAppointmentsByDoctor(
+        doctorId,
+      );
+
+      if (!mounted) return;
+
+      setState(() => _list = _removeExpired(list));
+      _updateCaregiverListeners(_list);
+    } catch (_) {}
   }
 }
 

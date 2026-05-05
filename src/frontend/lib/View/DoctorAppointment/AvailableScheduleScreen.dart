@@ -366,6 +366,13 @@ class _AvailableScheduleScreenState extends State<AvailableScheduleScreen> {
         startingDayOfWeek: StartingDayOfWeek.sunday,
         availableGestures: AvailableGestures.horizontalSwipe,
 
+        enabledDayPredicate: (day) {
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final currentDay = DateTime(day.year, day.month, day.day);
+          return !currentDay.isBefore(today);
+        },
+
         selectedDayPredicate: (day) =>
             selectedDay != null && isSameDay(day, selectedDay),
 
@@ -749,6 +756,7 @@ class _AvailableScheduleScreenState extends State<AvailableScheduleScreen> {
                       const SnackBar(
                         content: Text(
                           "تم الحفظ بنجاح",
+                          textDirection: TextDirection.rtl,
                           style: TextStyle(color: BColors.white),
                         ),
                         backgroundColor: BColors.primary,
@@ -760,7 +768,9 @@ class _AvailableScheduleScreenState extends State<AvailableScheduleScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          "فشل الحفظ: $e",
+                          "فشل الحفظ",
+                          textDirection: TextDirection.rtl,
+
                           style: TextStyle(color: BColors.white),
                         ),
                         backgroundColor: BColors.validationError,
