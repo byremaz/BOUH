@@ -38,7 +38,7 @@ public class ViewDoctorDetailsUnitTest {
         expectedDto.setAverageRating(4.5);
         expectedDto.setAreaOfKnowledge("Child Psychology");
         expectedDto.setQualifications(List.of("PhD", "MD"));
-        expectedDto.setYearsOfExperience(10);
+        expectedDto.setYearsOfExperience(3);
         expectedDto.setProfilePhotoURL("https://example.com/photo.jpg");
         when(doctorRepo.getDoctorDetails(doctorId)).thenReturn(expectedDto);
 
@@ -57,7 +57,7 @@ public class ViewDoctorDetailsUnitTest {
         assertEquals(4.5, result.getAverageRating());
         assertEquals("Child Psychology", result.getAreaOfKnowledge());
         assertEquals(List.of("PhD", "MD"), result.getQualifications());
-        assertEquals(10, result.getYearsOfExperience());
+        assertEquals(3, result.getYearsOfExperience());
         assertEquals("https://example.com/photo.jpg", result.getProfilePhotoURL());
     }
 
