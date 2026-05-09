@@ -59,7 +59,7 @@ public class EditDoctorProfileUnitTest {
                 "female",
                 List.of("طب الأطفال", "الطب النفسي للأطفال"),
                 3,
-                "gs://bucket/photo.jpg",
+                "https://example.com/photo.jpg",
                 "SA1234567890123456789012"
         );
 
